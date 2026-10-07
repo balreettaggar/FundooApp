@@ -1,13 +1,105 @@
-# .NET build files
-bin/
-obj/
+# =========================
+# Visual Studio
+# =========================
 
-# JetBrains Rider
-.idea/
-
-# macOS
-.DS_Store
-
-# User-specific files
+.vs/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
+
+# =========================
+# Build output
+# =========================
+
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+
+# =========================
+# .NET / NuGet
+# =========================
+
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+packages/
+
+# =========================
+# ASP.NET Core
+# =========================
+
+appsettings.*.local.json
+
+# =========================
+# Environment / Secrets
+# =========================
+
+.env
+.env.*
+!.env.example
+
+# =========================
+# Test results / Coverage
+# =========================
+
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+CodeCoverage/
+
+# NUnit
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# =========================
+# JetBrains Rider / IntelliJ
+# =========================
+
+.idea/
+
+# =========================
+# VS Code
+# =========================
+
+.vscode/
+
+# =========================
+# OS generated files
+# =========================
+
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# =========================
+# Temporary files
+# =========================
+
+*.tmp
+*.temp
+*.log
+~$*
+*~
+
+# =========================
+# MSBuild logs
+# =========================
+
+*.binlog
+BuildLog.*

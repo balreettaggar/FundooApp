@@ -11,7 +11,7 @@ using RepositoryLayer.Context;
 namespace RepositoryLayer.Migrations
 {
     [DbContext(typeof(FundooContext))]
-    [Migration("20260929082525_InitialCreate")]
+    [Migration("20261007042311_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

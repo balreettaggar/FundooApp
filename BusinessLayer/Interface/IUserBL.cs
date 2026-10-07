@@ -5,5 +5,5 @@ namespace BusinessLayer.Interface;
 public interface IUserBL
 {
     public ResponseModel<RegistrationModel> RegisterUserBL(RegistrationModel register);
-    public ResponseModel<LoginModel> LoginUserBL(LoginModel login);
+    public ResponseModel<LoginResponseModel> LoginUserBL(LoginModel login);
 }
