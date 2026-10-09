@@ -190,7 +190,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 // Map Controllers
 app.MapControllers();
