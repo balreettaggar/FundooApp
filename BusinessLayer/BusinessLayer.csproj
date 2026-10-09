@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\EmailModel\EmailModel.csproj" />
       <ProjectReference Include="..\Models\Models.csproj" />
       <ProjectReference Include="..\RepositoryLayer\RepositoryLayer.csproj" />
     </ItemGroup>

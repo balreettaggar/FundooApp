@@ -1,6 +1,8 @@
 using EmailService.Interface;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using EmailService.Service;
+using EmailService.Interface;
 
 namespace EmailController.Controller;
 using EmailModel.Model;

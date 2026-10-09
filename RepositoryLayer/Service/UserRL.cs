@@ -63,7 +63,21 @@ public class UserRL : IUserRL
 
         return null;
     }
-    
-    
-    
+
+    public UserEntity? FindUserByEmail(string email)
+    {
+        return context.Users.FirstOrDefault(u => u.Email == email);
+    }
+
+    public UserEntity? GetUserById(int userId)
+    {
+        return context.Users
+            .FirstOrDefault(user => user.UserId == userId);
+    }
+
+    public void UpdatePassword(UserEntity user)
+    {
+        context.Users.Update(user);
+        context.SaveChanges();
+    }
 }

@@ -54,6 +54,32 @@ public class FundooController : ControllerBase
         Console.WriteLine("Profile is displayed");
         return Ok("Profile is displayed");
     }
-    
+
+    [Authorize]
+    [HttpPost]
+    [Route("forget-password")]
+    public async Task<IActionResult> ForgetPassword(ForgetPasswordModel forgetPasswordModel)
+    {
+        ResponseModel<string> responseModel = await userBL.ForgetPasswordBL(forgetPasswordModel);
+        if (responseModel.IsSuccess)
+        {
+            return Ok(responseModel);
+        }
+        return BadRequest(responseModel);
+    }
+
+    [Authorize]
+    [HttpPost]
+    [Route("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordModel resetPasswordModel)
+    {
+        ResponseModel<string> responseModel = await userBL.ResetPassword(resetPasswordModel);
+        if (responseModel.IsSuccess)
+        {
+            return Ok(responseModel);
+        }
+        return BadRequest(responseModel);
+    }
+
 }
 
