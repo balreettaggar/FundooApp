@@ -177,15 +177,34 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FundooCorsPolicy", policy =>
+    {
+        policy
+            .AllowAnyOrigin();
+        policy
+            .AllowAnyHeader();
+        policy
+            .AllowAnyMethod();
+    });
+});
+
 
 
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseRouting();
+
+app.UseCors("FundooCorsPolicy");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
