@@ -1,7 +1,10 @@
 ﻿using BusinessLayer.Interface;
 using BusinessLayer.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity; // gives us Password Hasher
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; // gives us DbContext, DbSet, UseNpsql
 using Microsoft.IdentityModel.Tokens; // provides us SymmetricSecurityKey, TokenValidationParameters
 using Microsoft.OpenApi.Models; // These are used to tell Swagger: "This API uses Bearer JWT authentication."
@@ -10,6 +13,9 @@ using RepositoryLayer.Entity; //gives us UserEntity which is needed for Password
 using RepositoryLayer.Interface;
 using RepositoryLayer.Service;
 using System.Text; // for later UTF-8 encoding
+
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 
 
 var builder = WebApplication.CreateBuilder(args); // we assemble our application 
@@ -112,27 +118,42 @@ builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme =
             JwtBearerDefaults.AuthenticationScheme;
+        //When I need to authenticate a request by default, use JWT Bearer authentication.
+        // For example, a protected endpoint:
+        //[Authorize]
+        //[HttpGet]
+        //public IActionResult Profile() with no valid token may result in: 401 Unauthorized
 
         options.DefaultChallengeScheme =
             JwtBearerDefaults.AuthenticationScheme;
+        //If authentication is required but the user isn't authenticated, use JWT Bearer's challenge behavior.
     })
+
+    //"Okay, you said we're using JWT. But how should ASP.NET Core validate it?"
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true, // checks for token expiry or not 
+            ValidateIssuerSigningKey = true, // checks against the fake token
 
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
 
-            IssuerSigningKey = new SymmetricSecurityKey(
+            IssuerSigningKey = new SymmetricSecurityKey( // creates a cryptographic key which would be used for
+                // both signing and validation
                 Encoding.UTF8.GetBytes(
                     builder.Configuration["Jwt:Key"]!
                 ) // this converts JWT signing key from string to bytes
             )
+
+            //Development:
+            //appsettings.Development.json / user secrets
+
+            //Production:
+            //Environment variable / secret manager
         };
     });
 
@@ -148,6 +169,46 @@ builder.Services.AddAuthentication(options =>
 // (Other common schemes include Basic, Digest, or API-Key).
 //• <token>: The actual cryptographic credential (like a JWT) containing the access permissions.
 
+const string ExternalCookieScheme = "ExternalCookie";
+const string GoogleOidcScheme = "GoogleOIDC";
+
+builder.Services
+    .AddAuthentication()
+    .AddCookie(ExternalCookieScheme, options =>
+    {
+        options.Cookie.Name = "Fundoo.External";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+
+        // Local HTTP development only.
+        options.Cookie.SecurePolicy =
+            CookieSecurePolicy.SameAsRequest;
+
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+    })
+    .AddOpenIdConnect(GoogleOidcScheme, options =>
+    {
+        options.SignInScheme = ExternalCookieScheme;
+        options.Authority = "https://accounts.google.com";
+
+        options.ClientId =
+            builder.Configuration["Authentication:Google:ClientId"]!;
+
+        options.ClientSecret =
+            builder.Configuration["Authentication:Google:ClientSecret"]!;
+
+        options.CallbackPath = "/signin-oidc";
+        options.ResponseType = "code";
+        options.UsePkce = true;
+        options.SaveTokens = false;
+
+        options.Scope.Clear();
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+
+        options.GetClaimsFromUserInfoEndpoint = true;
+    });
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -215,3 +276,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// few questions where user when logged is authorized to retrive api endpoints like get information

@@ -3,11 +3,18 @@ using BusinessLayer.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Security.Claims;
 
 namespace Fundoo.Controllers;
 
-[ApiController]
-[Route("/api/[controller]")]
+[ApiController] // tells the application that the class is REST API controller not traditional MVC controller
+// applying it provides a specific enables attribute's functionalities like if model valdidation is failed, it automatically throws
+// 400 client side error 
+[Route("/api/[controller]")] // this sets the url path to access this below class functionality
+// route maps the url to this file (class), api is the name being contained in url, and then controller would be suffix which 
+// is being replaced by the name of the class like fundoo here
 public class FundooController : ControllerBase
 {
     private IUserBL userBL;
@@ -16,8 +23,8 @@ public class FundooController : ControllerBase
         this.userBL = userBL;
     }
 
-    [HttpPost]
-    [Route("register")]
+    [HttpPost] // marks it as a post request
+    [Route("register")] // resolves the base url to api/fundoo/register
     public IActionResult RegisterUser(RegistrationModel registrationModel)
     {
         ResponseModel<RegistrationModel> response =   userBL.RegisterUserBL(registrationModel);
@@ -79,6 +86,63 @@ public class FundooController : ControllerBase
             return Ok(responseModel);
         }
         return BadRequest(responseModel);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("google-login")]
+    public IActionResult GoogleLogin()
+    {
+        var properties = new AuthenticationProperties
+        {
+            RedirectUri = "/api/fundoo/google-complete"
+        };
+
+        return Challenge(properties, "GoogleOIDC");
+    }
+
+    [AllowAnonymous]
+    [HttpGet("google-complete")]
+    public async Task<IActionResult> GoogleComplete()
+    {
+        var result = await HttpContext.AuthenticateAsync(
+            "ExternalCookie"
+        );
+
+        if (!result.Succeeded || result.Principal == null)
+        {
+            return Unauthorized(new
+            {
+                Message = "Google sign-in failed."
+            });
+        }
+
+        var principal = result.Principal;
+
+        var googleSubject =
+    principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
+    ?? principal.FindFirst("sub")?.Value;
+        var email = principal.FindFirst(ClaimTypes.Email)?.Value
+                    ?? principal.FindFirst("email")?.Value;
+
+        if (string.IsNullOrWhiteSpace(googleSubject) ||
+            string.IsNullOrWhiteSpace(email))
+        {
+            await HttpContext.SignOutAsync("ExternalCookie");
+
+            return Unauthorized(new
+            {
+                Message = "Required Google identity claims are missing."
+            });
+        }
+
+        await HttpContext.SignOutAsync("ExternalCookie");
+
+        return Ok(new
+        {
+            Message = "Google identity verified successfully.",
+            Email = email,
+            GoogleSubject = googleSubject
+        });
     }
 
 }
