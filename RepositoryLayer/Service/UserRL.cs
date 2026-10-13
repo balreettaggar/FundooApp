@@ -37,11 +37,11 @@ public class UserRL : IUserRL
         user.Password = hasher.HashPassword(user, register.Password);
         
         context.Users.Add(user);
-      var result =   context.SaveChanges();
-      Console.WriteLine(result);
-      rm.IsSuccess = true;
-      rm.Message = "User successfully registered";
-      rm.Data = register;
+        var result =   context.SaveChanges();
+        Console.WriteLine(result);
+        rm.IsSuccess = true;
+        rm.Message = "User successfully registered";
+        rm.Data = register;
         return rm;
     }
 
@@ -71,8 +71,7 @@ public class UserRL : IUserRL
 
     public UserEntity? GetUserById(int userId)
     {
-        return context.Users
-            .FirstOrDefault(user => user.UserId == userId);
+        return context.Users.FirstOrDefault(user => user.UserId == userId);
     }
 
     public void UpdatePassword(UserEntity user)
@@ -80,4 +79,34 @@ public class UserRL : IUserRL
         context.Users.Update(user);
         context.SaveChanges();
     }
+
+
+    public UserEntity? FindUserByExternalLogin(string provider, string providerSubject)
+    {
+        return context.ExternalLogins
+            .Where(e => e.Provider == provider && e.ProviderSubject == providerSubject)
+            .Select(e => e.User)
+            .FirstOrDefault();
+    }
+
+    public bool ExternalLoginExists(string provider, string providerSubject)
+    {
+        return context.ExternalLogins.Any(
+            e => e.Provider == provider &&
+                 e.ProviderSubject == providerSubject);
+    }
+
+    public void AddExternalLogin(int userId, string provider, string providerSubject)
+    {
+        var externalLogin = new ExternalLoginEntity
+        {
+            UserId = userId,
+            Provider = provider,
+            ProviderSubject = providerSubject
+        };
+
+        context.ExternalLogins.Add(externalLogin);
+        context.SaveChanges();
+    }
+
 }

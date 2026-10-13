@@ -15,13 +15,15 @@ namespace Fundoo.Controllers;
 [Route("/api/[controller]")] // this sets the url path to access this below class functionality
 // route maps the url to this file (class), api is the name being contained in url, and then controller would be suffix which 
 // is being replaced by the name of the class like fundoo here
-public class FundooController : ControllerBase
+public class FundooController : ControllerBase // controller base class gives us some functionalities like response.ok which then ASP.NET matches to 200
+    // status code, similarly bad request 400
 {
     private IUserBL userBL;
     public FundooController(IUserBL userBL)
     {
         this.userBL = userBL;
     }
+    // we need dependency injection to use other class's functionalities as well, it is similar to making an instance of other class to access its functions
 
     [HttpPost] // marks it as a post request
     [Route("register")] // resolves the base url to api/fundoo/register
