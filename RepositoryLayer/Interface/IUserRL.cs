@@ -19,4 +19,10 @@ public interface IUserRL
 
     void AddExternalLogin(int userId, string provider, string providerSubject);
 
+    UserEntity CreateGoogleUserWithExternalLogin(
+        string email,
+        string firstName,
+        string lastName,
+        string providerSubject);
+
 }

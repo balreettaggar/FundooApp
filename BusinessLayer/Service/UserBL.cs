@@ -203,4 +203,49 @@ public class UserBL : IUserBL
             };
         }
     }
+
+
+    public ResponseModel<LoginResponseModel> GoogleLoginBL(
+        string email,
+        string providerSubject,
+        string firstName,
+        string lastName)
+    {
+        try
+        {
+            UserEntity? user = userRL.FindUserByExternalLogin(
+                "Google",
+                providerSubject);
+
+            if (user == null)
+            {
+                user = userRL.CreateGoogleUserWithExternalLogin(
+                    email,
+                    firstName,
+                    lastName,
+                    providerSubject);
+            }
+
+            return new ResponseModel<LoginResponseModel>
+            {
+                IsSuccess = true,
+                Message = "Google login successful.",
+                Data = new LoginResponseModel
+                {
+                    Email = user.Email,
+                    Token = jwtService.GenerateToken(user)
+                }
+            };
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new ResponseModel<LoginResponseModel>
+            {
+                IsSuccess = false,
+                Message = ex.Message,
+                Data = null
+            };
+        }
+    }
+
 }
