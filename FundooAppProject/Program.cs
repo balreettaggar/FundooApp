@@ -59,7 +59,7 @@ builder.Services.AddScoped<IUserBL , UserBL>(); // dependency injection
 //DI container 
 //      ↓
 //UserBL object
-//      ↓
+//      ↓ /
 //pass it to FundooController
 // interface is used for acheiving abstraction
 //Controller
@@ -73,6 +73,8 @@ builder.Services.AddScoped<IUserBL , UserBL>(); // dependency injection
 //UserBL   it follows loose coupling
 
 builder.Services.AddScoped<IUserRL , UserRL>();
+builder.Services.AddScoped<INotesBL, NotesBL>();
+builder.Services.AddScoped<INotesRL, NotesRL>();
 builder.Services.AddScoped<JwtService>(); // No interface here
 builder.Services.AddScoped<PasswordHasher<UserEntity>>();
 builder.Services.AddScoped<EmailClient>();
@@ -86,7 +88,7 @@ builder.Services.AddDbContext<FundooContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("FundooConnection"));
 });
 
-// "My application uses EF Core, and FundooContext is my database context." 
+// "My application uses EF Core, and FundooContext is my database context." git 
 // EF Core is ORM (Object Relational Mapper) used to map c# code to database (EF core is
 // framework), and DB Context is the concrete implememtation of it
 

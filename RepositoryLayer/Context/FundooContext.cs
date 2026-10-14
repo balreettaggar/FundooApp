@@ -29,4 +29,6 @@ public class FundooContext : DbContext
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
+
+    public DbSet<NoteEntity> Notes { get; set; }
 }
