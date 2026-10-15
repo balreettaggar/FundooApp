@@ -13,9 +13,13 @@ using RepositoryLayer.Entity; //gives us UserEntity which is needed for Password
 using RepositoryLayer.Interface;
 using RepositoryLayer.Service;
 using System.Text; // for later UTF-8 encoding
+//using EmailService.Service;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using EmailService.Interface;
+//using EmailService.Service;
+//using EmailService.Service;
 
 
 var builder = WebApplication.CreateBuilder(args); // we assemble our application 
@@ -79,6 +83,7 @@ builder.Services.AddScoped<JwtService>(); // No interface here
 builder.Services.AddScoped<PasswordHasher<UserEntity>>();
 builder.Services.AddScoped<EmailClient>();
 builder.Services.AddScoped<HttpClient>();
+builder.Services.AddScoped<IEmailService,BusinessLayer.Service.EmailService>();
 
 // Add Scoped is one of the 3 lifetimes transient - new instance when requested, Scoped - new instance per HTTP request and
 // Singleton - one instance per application's lifetime

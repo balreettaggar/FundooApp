@@ -24,12 +24,13 @@ public class FundooController : ControllerBase // controller base class gives us
         this.userBL = userBL;
     }
     // we need dependency injection to use other class's functionalities as well, it is similar to making an instance of other class to access its functions
+    // we need not to explicitly call fundooController's constructor, once api hits the controller layer, ASP .NET core resolves the dependency injection
 
     [HttpPost] // marks it as a post request
     [Route("register")] // resolves the base url to api/fundoo/register
     public IActionResult RegisterUser(RegistrationModel registrationModel)
     {
-        ResponseModel<RegistrationModel> response =   userBL.RegisterUserBL(registrationModel);
+        ResponseModel<RegistrationModel> response =   userBL.RegisterUserBL(registrationModel); // hands control to business layer's UserBL
         if (response.IsSuccess)
         {
             return Ok(response);
