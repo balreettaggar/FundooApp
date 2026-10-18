@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using RepositoryLayer.Entity;
 
-namespace BusinessLayer.Service;
+namespace Middleware.Service;
 
 public class JwtService
 {

@@ -8,6 +8,8 @@ using RepositoryLayer.Interface;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Caching.Distributed;
+using Middleware.Service;
 
 namespace BusinessLayer.Service;
 
@@ -17,12 +19,14 @@ public class UserBL : IUserBL
     public JwtService jwtService;
     public EmailClient client;
     public IConfiguration configuration;
-    public UserBL(IUserRL userRL , JwtService jwtService, EmailClient client, IConfiguration configuration)
+    private readonly IDistributedCache _cache;
+    public UserBL(IUserRL userRL , JwtService jwtService, EmailClient client, IConfiguration configuration, IDistributedCache _cache)
     {
         this.userRL = userRL;
         this.jwtService = jwtService;
         this.client = client;
         this.configuration = configuration;
+        this._cache = _cache;
     }
     
     public ResponseModel<RegistrationModel> RegisterUserBL(RegistrationModel register)

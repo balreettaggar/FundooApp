@@ -14,6 +14,8 @@ using RepositoryLayer.Interface;
 using RepositoryLayer.Service;
 using System.Text; // for later UTF-8 encoding
 //using EmailService.Service;
+using NLog.Web;
+using Middleware.Service;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -39,6 +41,9 @@ var builder = WebApplication.CreateBuilder(args); // we assemble our application
 // ├── Environment
 // ├── Logging
 // └── Host/Web server configuration , mostly we use Services and Configuration
+
+builder.Logging.ClearProviders();
+builder.Host.UseNLog();
 
 builder.Services.AddControllers(); // this application uses controller based web apis
 
@@ -256,6 +261,12 @@ builder.Services.AddCors(options =>
         policy
             .AllowAnyMethod();
     });
+});
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "localhost:6379";
+    options.InstanceName = "Fundoo:";
 });
 
 

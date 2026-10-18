@@ -1,13 +1,15 @@
 using BusinessLayer.Interface;
 using BusinessLayer.Service;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using NLog;
 using System.Security.Claims;
+using Microsoft.Extensions.Caching.Distributed;
 
-namespace Fundoo.Controllers;
+namespace Fundoo.Middleware;
 
 [ApiController] // tells the application that the class is REST API controller not traditional MVC controller
 // applying it provides a specific enables attribute's functionalities like if model valdidation is failed, it automatically throws
@@ -19,9 +21,12 @@ public class FundooController : ControllerBase // controller base class gives us
     // status code, similarly bad request 400
 {
     private IUserBL userBL;
-    public FundooController(IUserBL userBL)
+    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private readonly IDistributedCache _cache;
+    public FundooController(IUserBL userBL, IDistributedCache cache)
     {
         this.userBL = userBL;
+        _cache = cache;
     }
     // we need dependency injection to use other class's functionalities as well, it is similar to making an instance of other class to access its functions
     // we need not to explicitly call fundooController's constructor, once api hits the controller layer, ASP .NET core resolves the dependency injection
@@ -33,9 +38,13 @@ public class FundooController : ControllerBase // controller base class gives us
         ResponseModel<RegistrationModel> response =   userBL.RegisterUserBL(registrationModel); // hands control to business layer's UserBL
         if (response.IsSuccess)
         {
+            logger.Info("User registeration completed succesfully");
             return Ok(response);
+        } else
+        {
+            logger.Warn("User registeration failed");
+            return BadRequest(response);
         }
-        return BadRequest(response);
     }
 
     [HttpPost]
@@ -48,6 +57,21 @@ public class FundooController : ControllerBase // controller base class gives us
             return Ok(response);
         }
         return BadRequest(response);
+    }
+
+    [HttpGet("redis-test")]
+    public async Task<IActionResult> RedisTest()
+    {
+        await _cache.SetStringAsync(
+            "redis-test",
+            "Fundoo connected to Redis!");
+
+        var value = await _cache.GetStringAsync("redis-test");
+
+        return Ok(new
+        {
+            message = value
+        });
     }
 
     [HttpGet]
