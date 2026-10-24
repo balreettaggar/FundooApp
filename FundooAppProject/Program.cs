@@ -16,12 +16,14 @@ using System.Text; // for later UTF-8 encoding
 //using EmailService.Service;
 using NLog.Web;
 using Middleware.Service;
+using Middleware.ExceptionHandling;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using EmailService.Interface;
 //using EmailService.Service;
 //using EmailService.Service;
+using Middleware.Services.Encryption;
 
 
 var builder = WebApplication.CreateBuilder(args); // we assemble our application 
@@ -89,6 +91,8 @@ builder.Services.AddScoped<PasswordHasher<UserEntity>>();
 builder.Services.AddScoped<EmailClient>();
 builder.Services.AddScoped<HttpClient>();
 builder.Services.AddScoped<IEmailService,BusinessLayer.Service.EmailService>();
+builder.Services.AddScoped<PasswordHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Add Scoped is one of the 3 lifetimes transient - new instance when requested, Scoped - new instance per HTTP request and
 // Singleton - one instance per application's lifetime
@@ -273,6 +277,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 
 var app = builder.Build();
 
+//app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {

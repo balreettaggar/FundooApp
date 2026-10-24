@@ -20,9 +20,20 @@ namespace Fundoo.Middleware;
 public class FundooController : ControllerBase // controller base class gives us some functionalities like response.ok which then ASP.NET matches to 200
     // status code, similarly bad request 400
 {
-    private IUserBL userBL;
-    private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private IUserBL userBL; // for dependency injection
+    private static readonly Logger logger = LogManager.GetCurrentClassLogger(); // this for logging,
+     // Logger is NLog Logger type, 
+    // LogManager.GetCurrentClassLogger() — obtains a logger associated with the current class, which is FundooController.
+    // Info() records a normal informational event.
+    //Warn() records a warning, such as a failed registration attempt.
+
     private readonly IDistributedCache _cache;
+    // This is your Redis/distributed-cache integration point.
+    //IDistributedCache is an abstraction provided by.NET.Your application can use it to work with a configured
+    //distributed caching provider, such as Redis or Memurai.
+    // GetStringAsync() — retrieve a cached string.
+    //SetStringAsync() — store a string in the cache.
+    //RemoveAsync() — remove a cached entry.
     public FundooController(IUserBL userBL, IDistributedCache cache)
     {
         this.userBL = userBL;
@@ -33,9 +44,11 @@ public class FundooController : ControllerBase // controller base class gives us
 
     [HttpPost] // marks it as a post request
     [Route("register")] // resolves the base url to api/fundoo/register
-    public IActionResult RegisterUser(RegistrationModel registrationModel)
+    public IActionResult RegisterUser(RegistrationModel registrationModel) // this parameter is passed by client
+       // frontend or API caller) through the HTTP request body
+       // ASP.NET Core receives that data and binds it to the RegistrationModel object before executing your RegisterUser() method.
     {
-        ResponseModel<RegistrationModel> response =   userBL.RegisterUserBL(registrationModel); // hands control to business layer's UserBL
+        ResponseModel<string> response =   userBL.RegisterUserBL(registrationModel); // hands control to business layer's UserBL
         if (response.IsSuccess)
         {
             logger.Info("User registeration completed succesfully");
@@ -46,6 +59,13 @@ public class FundooController : ControllerBase // controller base class gives us
             return BadRequest(response);
         }
     }
+    //IActionResult is an interface in ASP.NET Core that represents the result of executing a controller action.
+    // it lets your controller return different kinds of HTTP responses from the same method. like 200, 404, 400, 500
+    // Both Ok(response) and BadRequest(response) return objects that implement IActionResult.
+    //Therefore, your method can return either one without changing its declared return type.
+    // IActionResult is the abstraction for the result of this controller action
+    // Your current method combines the two: the business layer returns ResponseModel<string>,
+    // and the controller wraps that object in Ok() or BadRequest().
 
     [HttpPost]
     [Route("login")]
@@ -89,7 +109,6 @@ public class FundooController : ControllerBase // controller base class gives us
         return Ok("Profile is displayed");
     }
 
-    [Authorize]
     [HttpPost]
     [Route("forget-password")]
     public async Task<IActionResult> ForgetPassword(ForgetPasswordModel forgetPasswordModel)
@@ -102,7 +121,6 @@ public class FundooController : ControllerBase // controller base class gives us
         return BadRequest(responseModel);
     }
 
-    [Authorize]
     [HttpPost]
     [Route("reset-password")]
     public async Task<IActionResult> ResetPassword(ResetPasswordModel resetPasswordModel)

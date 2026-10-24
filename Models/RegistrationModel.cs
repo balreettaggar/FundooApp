@@ -21,6 +21,7 @@ public class RegistrationModel
     [EmailAddress]
     public string Email { get; set; }
 
+    public RegistrationModel() { }
     public RegistrationModel(string firstName, string lastName, string userName, string password, string contactNumber,
         string email)
     {

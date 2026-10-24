@@ -5,8 +5,7 @@ namespace RepositoryLayer.Interface;
 
 public interface IUserRL
 {
-    public ResponseModel<RegistrationModel> RegisterUserRL(RegistrationModel register);
-    public UserEntity? LoginUserRL(LoginModel login);
+    public void RegisterUserRL(UserEntity user);
 
     public UserEntity? GetUserById(int userId);
 

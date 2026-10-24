@@ -13,7 +13,6 @@ using EmailModel.Model;
 public class EmailService : IEmailService
 {
 
-
     private readonly IConfiguration configuration;
 
     public EmailService(IConfiguration configuration)

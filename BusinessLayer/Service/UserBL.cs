@@ -10,53 +10,123 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Caching.Distributed;
 using Middleware.Service;
+using Middleware.Services.Encryption;
 
 namespace BusinessLayer.Service;
 
 public class UserBL : IUserBL
 {
-    public IUserRL userRL;
-    public JwtService jwtService;
-    public EmailClient client;
-    public IConfiguration configuration;
-    private readonly IDistributedCache _cache;
-    public UserBL(IUserRL userRL , JwtService jwtService, EmailClient client, IConfiguration configuration, IDistributedCache _cache)
+    // These fields hold references to objects that the business layer may use.
+    public IUserRL userRL; // for repository layer, calls RL
+    public JwtService jwtService; // handles jwt related functionality
+    public EmailClient client; // used for email sending functionality
+    public IConfiguration configuration; // mostly for user secrets or env file
+    private readonly IDistributedCache _cache; // provides access to redis cache
+    private readonly PasswordHandler passwordService; // for our custom salt maker, hashes the password and verifies
+    public UserBL(IUserRL userRL , JwtService jwtService, EmailClient client, IConfiguration configuration, IDistributedCache _cache, PasswordHandler passwordService)
     {
         this.userRL = userRL;
         this.jwtService = jwtService;
         this.client = client;
         this.configuration = configuration;
         this._cache = _cache;
-    }
-    
-    public ResponseModel<RegistrationModel> RegisterUserBL(RegistrationModel register)
-    {
-        return userRL.RegisterUserRL(register);
+        this.passwordService = passwordService;
     }
 
-    public ResponseModel<LoginResponseModel> LoginUserBL(LoginModel login)
+    public ResponseModel<string> RegisterUserBL(RegistrationModel model)
     {
-        
-        UserEntity? userEntity =   userRL.LoginUserRL(login);
-        ResponseModel<LoginResponseModel> rm = new ResponseModel<LoginResponseModel>();
-        if (userEntity == null)
+        var (hash, salt) = passwordService.HashPassword(model.Password);
+        // model.password is the plain text arrived with the http request, we are forwarding it to passwordHandler's instance
+        // we are catching hash and salt being returned
+        // The (hash, salt) syntax is called tuple deconstruction. Your method returns two strings bundled together
+        // in a tuple, and this line unpacks them into two local variables.
+
+        var user = new UserEntity
         {
-            rm.IsSuccess = false;
-            rm.Message = "login email or password is wrong";
-            rm.Data = null;
-        }
-        else
+            FirstName = model.FirstName,
+            LastName = model.LastName,
+            Email = model.Email,
+            PhoneNumber = model.ContactNumber,
+            Password = hash,
+            Salt = salt
+        };
+
+        userRL.RegisterUserRL(user);
+
+        return new ResponseModel<string>
         {
-            rm.IsSuccess = true;
-            rm.Message = "login success";
-            rm.Data = new LoginResponseModel
+            IsSuccess = true,
+            Message = "Registration successful.",
+            Data = user.Email
+        };
+    }
+
+    //public ResponseModel<LoginResponseModel> LoginUserBL(LoginModel login)
+    //{
+
+    //    UserEntity? userEntity =   userRL.LoginUserRL(login);
+    //    ResponseModel<LoginResponseModel> rm = new ResponseModel<LoginResponseModel>();
+    //    if (userEntity == null)
+    //    {
+    //        rm.IsSuccess = false;
+    //        rm.Message = "login email or password is wrong";
+    //        rm.Data = null;
+    //    }
+    //    else
+    //    {
+    //        rm.IsSuccess = true;
+    //        rm.Message = "login success";
+    //        rm.Data = new LoginResponseModel
+    //        {
+    //            Email = userEntity.Email,
+    //            Token = jwtService.GenerateToken(userEntity)
+    //        };
+    //    }
+    //    return rm;
+    //}
+
+    public ResponseModel<LoginResponseModel> LoginUserBL(LoginModel loginModel)
+    {
+        UserEntity? user = userRL.FindUserByEmail(loginModel.Email);
+
+        if (user == null)
+        {
+            return new ResponseModel<LoginResponseModel>
             {
-                Email = userEntity.Email,
-                Token = jwtService.GenerateToken(userEntity)
+                IsSuccess = false,
+                Message = "Invalid email or password.",
+                Data = null
             };
         }
-        return rm;
-    }
+
+        bool isPasswordValid = passwordService.VerifyPassword(
+            loginModel.Password,
+            user.Password,
+            user.Salt
+        );
+
+        if (!isPasswordValid)
+        {
+            return new ResponseModel<LoginResponseModel>
+            {
+                IsSuccess = false,
+                Message = "Invalid email or password.",
+                Data = null
+            };
+        }
+
+        return new ResponseModel<LoginResponseModel>
+        {
+            IsSuccess = true,
+            Message = "Login successful.",
+            Data = new LoginResponseModel
+            {
+                Email = user.Email,
+                Token = jwtService.GenerateToken(user)
+            }
+        };
+     }
+        
 
     public async Task<ResponseModel<string>> ForgetPasswordBL(ForgetPasswordModel model)
     {
@@ -250,6 +320,7 @@ public class UserBL : IUserBL
                 Data = null
             };
         }
+
     }
 
 }

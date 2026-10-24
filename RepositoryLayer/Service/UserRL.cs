@@ -1,69 +1,48 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Models;
 using RepositoryLayer.Context;
 using RepositoryLayer.Entity;
 using RepositoryLayer.Interface;
 namespace RepositoryLayer.Service;
-using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
+
+using System.Collections.Generic;
+using System.Data;
+using System.Security.Cryptography;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 public class UserRL : IUserRL
 {
-    FundooContext context;
+    FundooContext context; // The context is the repository's gateway to Entity Framework Core and the configured database.
+                           //It gives your repository access to database operations without requiring you to manually open a database connection and
+                           //write an SQL INSERT statement for every entity.
+
     private PasswordHasher<UserEntity> hasher;
-    public UserRL(FundooContext context , PasswordHasher<UserEntity> hasher)
+
+    public UserRL(FundooContext context, PasswordHasher<UserEntity> hasher)
     {
         this.context = context;
         this.hasher = hasher;
     }
-    
-    
-    public ResponseModel<RegistrationModel> RegisterUserRL(RegistrationModel register)
+
+    // Remember the dependency chain?
+    //- FundooController depends on IUserBL.
+    //- UserBL depends on IUserRL.
+    //- UserRL depends on FundooContext.
+
+    public void RegisterUserRL(UserEntity user)
     {
-        var tempUser = context.Users.FirstOrDefault(u => u.Email == register.Email);
-        ResponseModel<RegistrationModel> rm = new ResponseModel<RegistrationModel>();
-        if (tempUser != null)
-        {
-            rm.IsSuccess = false;
-            rm.Message = "Email already exists";
-            rm.Data = null;
-            return rm;
-        }
-        
-        UserEntity user = new UserEntity();
-        user.FirstName = register.FirstName;
-        user.LastName = register.LastName;
-        user.Email = register.Email;
-        user.PhoneNumber = register.ContactNumber;
-        
-        user.Password = hasher.HashPassword(user, register.Password);
-        
-        context.Users.Add(user);
-        var result =   context.SaveChanges();
-        Console.WriteLine(result);
-        rm.IsSuccess = true;
-        rm.Message = "User successfully registered";
-        rm.Data = register;
-        return rm;
-    }
-
-    public UserEntity? LoginUserRL(LoginModel login)
-    {
-        var user = context.Users.FirstOrDefault(u => u.Email == login.Email );
-        
-        LoginResponseModel loginResponse = new LoginResponseModel();
-        loginResponse.Email = login.Email;
-        if (user == null)
-        {
-            return null;
-        }
-        
-        var decryptedPassword = hasher.VerifyHashedPassword(user, user.Password, login.Password);
-
-        if (decryptedPassword == PasswordVerificationResult.Success) return user;
-        
-
-        return null;
+        context.Users.Add(user); 
+        // context is your FundooContext instance.
+        // Users is a DbSet < UserEntity > property declared in that context.
+        // Add(user) tells EF Core to track this entity as a new record to be inserted.
+        // Add marks the entity to be saved in EF tracker
+        context.SaveChanges();
+        // If the insert succeeds, SaveChanges() normally returns the number of state entries written.
+        // Your code ignores that return value.
+        //If the insert fails because of a database error or constraint violation, SaveChanges() typically
+        //throws an exception. Your current repository doesn't catch it.
     }
 
     public UserEntity? FindUserByEmail(string email)

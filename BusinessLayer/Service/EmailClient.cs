@@ -2,24 +2,23 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using EmailModel.Model;
+using EmailService.Interface;
 
 namespace BusinessLayer.Service
 {
     public class EmailClient
     {
-        public HttpClient Client { get; }
+        private readonly IEmailService emailService;
 
-        public EmailClient(HttpClient client)
+        public EmailClient( IEmailService emailService)
         {
-            Client = client;
+            this.emailService = emailService;  
         }
 
-        public async Task SendEmail(EmailModel.Model.EmailModel model)
+        public async Task<bool> SendEmail(EmailModel.Model.EmailModel model)
         {
-            await Client.PostAsJsonAsync(
-                "http://localhost:5015/email/send",
-                model
-            );
+            await emailService.SendEmail(model);
+            return true;
         }
     }
 }
